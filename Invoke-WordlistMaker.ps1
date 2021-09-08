@@ -328,6 +328,7 @@ function Word-Filter($Input_File) {
     Write-Host -ForegroundColor White "[*] " -NoNewline;Write-Host -ForegroundColor Yellow ("Removed Total Words of: ${word}" );
     Write-Host -ForegroundColor White "[*] " -NoNewline;Write-Host -ForegroundColor Yellow "Filtering All Words completed in: " $sw.Elapsed;
     [GC]::Collect()
+    Remove-Item $Input_File
     return $Outfile
 
 
@@ -404,6 +405,7 @@ function Sort-Dedup ($Input_File) {
     Write-Host -ForegroundColor White "[*] " -NoNewline;Write-Host -ForegroundColor Yellow ("Writing Sorted File to disk completed in: {0}" -f $sw.Elapsed);
     Write-Host -ForegroundColor White "`n[+] " -NoNewline;Write-Host -ForegroundColor Green "New MSD file saved to:"
     Get-Item $sorted_file
+    Remove-Item $Input_File
     return $sorted_file
 
 }
