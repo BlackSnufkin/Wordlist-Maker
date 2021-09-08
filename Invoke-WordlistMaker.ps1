@@ -328,7 +328,6 @@ function Word-Filter($Input_File) {
     Write-Host -ForegroundColor White "[*] " -NoNewline;Write-Host -ForegroundColor Yellow ("Removed Total Words of: ${word}" );
     Write-Host -ForegroundColor White "[*] " -NoNewline;Write-Host -ForegroundColor Yellow "Filtering All Words completed in: " $sw.Elapsed;
     [GC]::Collect()
-    Remove-Item $Input_File
     return $Outfile
 
 
@@ -373,6 +372,9 @@ function Sort-Dedup ($Input_File) {
 
     $sw = [System.Diagnostics.Stopwatch]::StartNew();
     $ls = new-object system.collections.generic.List[string] $hs;
+    
+    Write-Host -ForegroundColor White "[*] " -NoNewline;Write-Host -ForegroundColor Yellow ("Total Of Duplicates Passwrods that Removed is: {0} " -f ($total_lines - $hs.Count));
+    $Global:Total_Duplicate = ($total_lines - $hs.Count)
     $ls.Sort();
     $sw.Stop();
     Write-Host -ForegroundColor White "[*] " -NoNewline;Write-Host -ForegroundColor Yellow ("Sorting All Lines completed in: {0}" -f $sw.Elapsed);
@@ -396,10 +398,13 @@ function Sort-Dedup ($Input_File) {
     }
 
     $sw.Stop();
-    Remove-Item $Input_File
+    
+
+    
     Write-Host -ForegroundColor White "[*] " -NoNewline;Write-Host -ForegroundColor Yellow ("Writing Sorted File to disk completed in: {0}" -f $sw.Elapsed);
     Write-Host -ForegroundColor White "`n[+] " -NoNewline;Write-Host -ForegroundColor Green "New MSD file saved to:"
     Get-Item $sorted_file
+    return $sorted_file
 
 }
 
@@ -416,8 +421,9 @@ if ($Directory -eq $null -or $Directory -eq "" -or (!(Test-Path $Directory))) {
 }
 
 $Global:Total_Words = 0
+$Global:Total_Duplicate = 0
 $Global:WorkSpace = WorkSpace -Directory $Directory
-
+Write-Host -ForegroundColor White "`n[*] " -NoNewline;pause
 Set-Location $Directory
 
 do {
@@ -472,12 +478,15 @@ do {
             Clear-Host
             if ($filtered_file -eq $null -or $filtered_file -eq "" -or (!(Test-Path $filtered_file))){
                 $filtered_file = File-Selection -Directory $Directory
-            
-            }
+                $total_lines = 0
+                
+            }    
             $sort_time = [System.Diagnostics.Stopwatch]::StartNew();
-            Sort-Dedup -Input_File $filtered_file
+            $sorted_file = Sort-Dedup -Input_File $filtered_file
+            
             $sort_time.stop();
             Write-Host -ForegroundColor White "`n[$] " -NoNewline;Write-Host -ForegroundColor Magenta ("------------- RunTime Statistic For Wordliat Maker -------------`n");
+            Write-Host -ForegroundColor White "[#] " -NoNewline;Write-Host -ForegroundColor Cyan ("Total of Duplicates that removed: $Global:Total_Duplicate");
             Write-Host -ForegroundColor White "[#] " -NoNewline;Write-Host -ForegroundColor Cyan ("Remove Duplicates and sort completed in: {0}" -f $sort_time.Elapsed );
             Write-Host -ForegroundColor White "`n[*] " -NoNewline;pause
             [GC]::Collect()
@@ -499,9 +508,11 @@ do {
 
             $filter_time = [System.Diagnostics.Stopwatch]::StartNew();
             $filtered_file = Word-Filter -Input_File $merge_file
+            
             $filter_time.stop();
             [GC]::Collect()
-
+            
+            
             $sort_time = [System.Diagnostics.Stopwatch]::StartNew();
             Sort-Dedup -Input_File $filtered_file
             $sort_time.stop();
@@ -514,6 +525,7 @@ do {
             Write-Host -ForegroundColor White "[#] " -NoNewline;Write-Host -ForegroundColor Cyan ("Merging RunTime is: {0}" -f $merge_time.Elapsed );
             Write-Host -ForegroundColor White "[#] " -NoNewline;Write-Host -ForegroundColor Cyan ("Total filtered words are: {0}" -f $Global:Total_Words  );
             Write-Host -ForegroundColor White "[#] " -NoNewline;Write-Host -ForegroundColor Cyan ("Filtering Words Completed in: {0}" -f $filter_time.Elapsed );
+            Write-Host -ForegroundColor White "[#] " -NoNewline;Write-Host -ForegroundColor Cyan ("Total of Duplicates that removed: $Global:Total_Duplicate");
             Write-Host -ForegroundColor White "[#] " -NoNewline;Write-Host -ForegroundColor Cyan ("Remove Duplicates and sort completed in: {0}" -f $sort_time.Elapsed );
             Write-Host -ForegroundColor White "[#] " -NoNewline;Write-Host -ForegroundColor Cyan ("Wordlist maker completed in: {0}" -f $total_time.Elapsed );
             Write-Host -ForegroundColor White "`n[*] " -NoNewline;pause
