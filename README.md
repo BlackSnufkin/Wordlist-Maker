@@ -1,5 +1,5 @@
 # Wordlist-Maker
-A Simpale Script to merge all wordlistsFiles in a given directory filets words remove duplicates and sort to one big wordlist
+A Simpale Script to merge all wordlistsFiles in a given directory filter words remove duplicates and sort to one big wordlist
 it an interactive script so no much need to explain
 Not handeling large files very wall sorry :/
 
