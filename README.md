@@ -1,2 +1,8 @@
 # Wordlist-Maker
-Some functions I wrote while working on another project in the end I turned it into one script that creates one big word list From all the list files in the folder
+A Simpale Script to merge all wordlistsFiles in a given directory filets words remove duplicates and sort to one big wordlist
+it an interactive script so no much need to explain
+Not handeling large files very wall sorry :/
+
+# TODO
+- [ ] Find a way to handle large files
+- [ ] Find a way to sort a large file and then remove duplicates
