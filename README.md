@@ -5,4 +5,4 @@ Not the best but stiil works nice
 
 # TODO
 - [ ] Find a way to slove: `Error: "Array dimensions exceeded supported range."`
-- [ ] Find a way to sort a large file and then remove duplicates
+
