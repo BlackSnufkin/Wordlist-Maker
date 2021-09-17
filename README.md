@@ -4,5 +4,5 @@ it is an interactive script so no much need to explain. <br>
 Not the best but stiil works nice
 
 # TODO
-- [ ] Find a way to handle large files
+- [ ] Find a way to slove: `Error: "Array dimensions exceeded supported range."`
 - [ ] Find a way to sort a large file and then remove duplicates
