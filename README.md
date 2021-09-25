@@ -4,9 +4,10 @@ it is an interactive script so no much need to explain. <br>
 Not the best but still works nice
 
 ### Note !!
-Check that you have enoght space on the disk
+Check that you have enoght space on the disk for all the Wordlists !!<br>
 Wordlists Source: [HashKiller](https://hashkiller.io/leaks), [capsop](https://wordlists.capsop.com/)
 
+---
 # TODO
 - [ ] Find a way to slove: `Error: "Array dimensions exceeded supported range."`
 
