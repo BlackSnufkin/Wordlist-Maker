@@ -3,6 +3,9 @@ A Simpale Script to merge all wordlistsFiles in a given directory filter words r
 it is an interactive script so no much need to explain. <br>
 Not the best but still works nice
 
+# Wordlists-Fetch
+A Script to download several wordlists from several sources 
+
 ### Note !!
 Check that you have enoght space on the disk for all the Wordlists !!<br>
 Wordlists Source: [HashKiller](https://hashkiller.io/leaks), [capsop](https://wordlists.capsop.com/)
@@ -10,4 +13,5 @@ Wordlists Source: [HashKiller](https://hashkiller.io/leaks), [capsop](https://wo
 ---
 # TODO
 - [ ] Find a way to slove: `Error: "Array dimensions exceeded supported range."`
+- [ ] Add More Wordlits To download =)
 
