@@ -80,8 +80,9 @@ function WorkSpace ($Directory) {
 }
 
 function File-Selection ($Directory){
-    $filelist = Get-ChildItem -Path $Directory  -Filter *.txt -Recurse | %{$_.FullName}
+    $filelist = Get-ChildItem -Path $Directory -File *.txt  -Recurse | %{$_.FullName}
     $file_num = 0
+    
     Write-Host "[!] " -NoNewline;Write-Host "All Files Are: `n" -ForegroundColor Magenta
     foreach ($file in $filelist) {
         $file_num ++;
@@ -90,8 +91,17 @@ function File-Selection ($Directory){
 
     }
     Write-Host "`n[?] " -NoNewline;Write-Host "Select a file to perform operations (1-$file_num): "-ForegroundColor Cyan -NoNewline;$File_Selection = Read-Host
-    $File_Selection = $filelist[($File_Selection - 1)]
-    return $File_Selection
+    if ($file_num -eq 1){
+        
+        $File_Selection = $filelist
+        return $File_Selection
+    }
+    
+    else{    
+    
+        $File_Selection = $filelist[($File_Selection -1)]
+        return $File_Selection
+    }
 }
 
 function Check-FileSize ($directory) {
@@ -138,7 +148,7 @@ function Split-By-Size ($file2split) {
     Write-Host "[+] " -NoNewline;Write-Host "Starting Split File By Size" -ForegroundColor Green
     $sw = [System.Diagnostics.Stopwatch]::StartNew();
     $from =  Get-Item $file2split
-    $rootName =  join-path $file2split.DirectoryName  $file2split.BaseName
+    $rootName =  join-path $from.DirectoryName  $from.BaseName
     $ext = "txt"
     $upperBound = 1024MB
 
@@ -253,17 +263,17 @@ function WordLists-Merger ($directory) {
     $dir_name = Split-Path $directory -Leaf
     $outFile = Join-Path $Global:WorkSpace ("{0}_Merged.txt" -f $dir_name);
     $fileList = Get-ChildItem -Path $directory\* -Include *.txt  -File  
-    $Writer = New-Object System.IO.StreamWriter $outFile 
+    $Writer = New-Object System.IO.StreamWriter ($outFile, $Utf8NoBomEncoding)  
     $sw = [System.Diagnostics.Stopwatch]::StartNew();
     $totalItems = $fileList.Length
     $cfile = 0
 
     foreach ($file in $filelist) {
-        
+        $Utf8NoBomEncoding = [System.Text.Encoding]::GetEncoding(65001)
         $corrent_file = (Get-Item $file).BaseName.ToString() + (Get-Item $file).Extension.ToString()
         Write-Progress -Activity "$cfile / $totalItems " -status "Now Adding: $corrent_file "   -percentComplete ($cfile / $totalItems * 100)
         #Write-Host -ForegroundColor White "[+] " -NoNewline;Write-Host -ForegroundColor Magenta "Now Adding $corrent_file "
-        $reader = New-Object System.IO.StreamReader($file)
+        $reader = New-Object System.IO.StreamReader($file, $Utf8NoBomEncoding)
         $content = $reader.ReadToEnd()
         $Writer.Write($content)
         $cfile ++
@@ -278,12 +288,13 @@ function WordLists-Merger ($directory) {
     return $outFile
 }
 
-function Word-Filter($Input_File) {
+function Word-Filter($Input_File,[int]$MinLength,[int]$MaxLenght) {
     
     Write-Host "`n[+] " -NoNewline;Write-Host "Starting To Filter Words" -ForegroundColor Green     
     $sw = [System.Diagnostics.Stopwatch]::StartNew();   
     $total_lines = 0
     Write-Host "`n[*] " -NoNewline;Write-Host -ForegroundColor Yellow ("Getting Total Lines Number..." );
+    
     if ($Input_File) {
     $reader = New-Object IO.StreamReader $Input_File
         if ($reader) {
@@ -291,12 +302,14 @@ function Word-Filter($Input_File) {
             $reader.Close()
         }
     }
-
+    
+    Write-Host "`n[*] " -NoNewline;Write-Host -ForegroundColor Yellow ("Filter Settings: MinLenght = $MinLength, MaxLenght = $MaxLenght" );
+    $Utf8NoBomEncoding = [System.Text.Encoding]::GetEncoding(65001)
     $Source = Get-Item $Input_File
-    $reader = New-Object IO.StreamReader $Input_File
+    $reader = New-Object IO.StreamReader ($Input_File, $Utf8NoBomEncoding)
     $root_dir =  $Source.Directory.FullName
-    $Outfile = Join-Path $Global:WorkSpace ("{0}_Filterd.txt" -f $Source.Directory.Name);
-    $Writer = New-Object System.IO.StreamWriter $outFile
+    $Outfile = Join-Path $Global:WorkSpace ("{0}_Filterd.txt" -f $Source.BaseName);
+    $Writer = New-Object System.IO.StreamWriter ($outFile , $Utf8NoBomEncoding)
     $nonASCII = "[^\x00-\x7F]"
     $word = 0
     $current_line = 0
@@ -306,11 +319,18 @@ function Word-Filter($Input_File) {
         $line = $reader.ReadLine();
         $current_line ++
 
-        if ($line.Length -lt 4 -or $line -cmatch $nonASCII -or $line -eq "" -or $line.Length -gt 65 ) {
+
+        if ($line.Length -lt $MinLength -or $line -cmatch $nonASCII -or $line -eq "" -or $line.Length -gt $MaxLenght ) {
 
             Write-Progress -Activity "Filtered words: $word / $total_lines" -status "Filtering The Word: $line" -percentComplete ($current_line / $total_lines * 100)
             $word ++               
             $Global:Total_Words ++
+        }
+        if ($line -cmatch "\s"){
+            $line = $line -replace "\s", ""
+            $Writer.WriteLine($line);
+            
+            
         }
 
         else {
@@ -319,7 +339,7 @@ function Word-Filter($Input_File) {
         }
     }
 
-    Write-Progress -Activity "Filtered words: $word / $total_lines" -status "Filtering The Word: $line" -percentComplete ($current_line / $total_lines * 100) -Completed               
+    #Write-Progress -Activity "Filtered words: $word / $total_lines" -status "Filtering The Word: $line" -percentComplete ($current_line / $total_lines * 100) -Completed               
     $Reader.close()
     $Writer.Close()
     $reader.Dispose()
@@ -338,7 +358,7 @@ function Word-Filter($Input_File) {
 function Sort-Dedup ($Input_File) {
     Write-Host "`n[+] " -NoNewline;Write-Host "Starting Remove Duplicates and Sorting" -ForegroundColor Green
     If ((Get-Item $Input_File).length -gt 1gb) {
-        Write-Host "`n[!] " -NoNewline; Write-Warning -Message "in case of large files it Can Killed duo System.OutOfMemoryException"
+        Write-Host "`n[!] " -NoNewline; Write-Warning -Message "in case of large files it Can Killed duo: Array dimensions exceeded supported range."
         Write-Host "[*] " -NoNewline;pause
     }
     Write-Host "`n[*] " -NoNewline;Write-Host "Getting Total Lines count.." -ForegroundColor Yellow
@@ -381,7 +401,7 @@ function Sort-Dedup ($Input_File) {
     Write-Host -ForegroundColor White "[*] " -NoNewline;Write-Host -ForegroundColor Yellow ("Sorting All Lines completed in: {0}" -f $sw.Elapsed);
     $source = Get-Item $Input_File
     $root_dir =  $source.Directory.FullName
-    $sorted_file = Join-Path $Global:WorkSpace ("{0}_MSD.txt" -f $source.Directory.Name);
+    $sorted_file = Join-Path $Global:WorkSpace ("{0}_MFDS.txt" -f $source.BaseName.Split("_")[0]);
 
     $sw = [System.Diagnostics.Stopwatch]::StartNew();
     try {
@@ -459,18 +479,27 @@ do {
          '2' {
             #Filter Words From Wordlist
             Clear-Host
+
+
             if ($merge_file -eq $null -or $merge_file -eq "" -or (!(Test-Path $merge_file))){
                 $merge_file = File-Selection $Directory
+                Write-Host -ForegroundColor White "`n[?] " -NoNewline; Write-Host -ForegroundColor Cyan "Select Minimum Lenght Of Words To Remove From List: " -NoNewline;[Int]$MinLength = Read-Host
+                Write-Host -ForegroundColor White "`n[?] " -NoNewline; Write-Host -ForegroundColor Cyan "Select Maximum Lenght Of Words To Remove From List: " -NoNewline;[Int]$MaxLength = Read-Host
             
             }
-            
+            else{
+                
+                $MinLength = 4 
+                $MaxLength = 65            
+            }
+
             $filter_time = [System.Diagnostics.Stopwatch]::StartNew();
-            $filtered_file = Word-Filter -Input_File $merge_file
+            $filtered_file = Word-Filter -Input_File $merge_file -MinLength $MinLength -MaxLenght $MaxLength
             $filter_time.stop();
             
             Write-Host -ForegroundColor White "`n[$] " -NoNewline;Write-Host -ForegroundColor Magenta ("------------- RunTime Statistic For Wordliat Maker -------------`n");
             Write-Host -ForegroundColor White "[#] " -NoNewline;Write-Host -ForegroundColor Cyan ("Total filtered words are: {0}" -f $Global:Total_Words  );
-            Write-Host -ForegroundColor White "[#] " -NoNewline;Write-Host -ForegroundColor Cyan ("Filtering Words Completed in: {0}" -f $fiter_time.Elapsed );
+            Write-Host -ForegroundColor White "[#] " -NoNewline;Write-Host -ForegroundColor Cyan ("Filtering Words Completed in: {0}" -f $filter_time.Elapsed );
             Write-Host -ForegroundColor White "`n[*] " -NoNewline;pause
             [GC]::Collect()
             }
@@ -504,12 +533,12 @@ do {
             [GC]::Collect()
 
             $merge_time = [System.Diagnostics.Stopwatch]::StartNew();
-            $merge_file = WordLists-Merger -directory $Directory
+            $merge_file = WordLists-Merger -directory $Directory 
             $merge_time.stop();
             [GC]::Collect()
 
             $filter_time = [System.Diagnostics.Stopwatch]::StartNew();
-            $filtered_file = Word-Filter -Input_File $merge_file
+            $filtered_file = Word-Filter -Input_File $merge_file -MinLength 4 -MaxLenght 65
             
             $filter_time.stop();
             [GC]::Collect()
