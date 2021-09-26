@@ -29,7 +29,11 @@ function WorkSpace ($Directory) {
     
 }
 
-
+    function Get-UrlStatusCode([string] $Url) {
+        try {(Invoke-WebRequest -Uri $Url -UseBasicParsing -DisableKeepAlive).StatusCode}
+        catch [Net.WebException]
+        {[int]$_.Exception.Response.StatusCode}
+    }
 
 
 
@@ -96,7 +100,24 @@ function WorkSpace ($Directory) {
     function capsop-Wordlists ($Path) {
     
         $base_Folder = "$Path\capsop-Wordlists"
-        New-Item -Path $base_Folder -ItemType Directory
+        if (!(Test-Path -Path $Base_Folder)) {
+
+            try {
+                New-Item -Path $base_Folder -Name "capsop-Wordlists" -ItemType Directory -ErrorAction Stop | Out-Null     
+                Write-Host -ForegroundColor White "`n[*] Work Space as been Created at: " -NoNewline; Write-Host -BackgroundColor Red "$Base_Folder"
+            } 
+       
+            catch {
+                Write-Error -Message "`n[-] Unable To create: $Base_Folder`n[!] Error Was: $_ "
+                 
+            }
+        } 
+        else {
+            Write-Host -ForegroundColor White "`n[!] " -NoNewline;Write-Host -BackgroundColor Magenta "Work Space For capsop-wordlist AllReady Exist"
+        
+        }
+
+        
 
         $capsop = "https://wordlists.capsop.com/"
         $LinkList =  ((Invoke-WebRequest -Uri $capsop).links.href | Sort-Object -Unique)
@@ -119,12 +140,30 @@ function WorkSpace ($Directory) {
         }
         foreach ($file in $file2donwload){
 
-            $lst = ($capsop  + $file)
-            $dest = ($base_Folder + "\" + ($capsop + $file).Split("/")[-1])
-            Write-Host "`n[+] Downloading: $lst"
+            $lst = $capsop  + $file
+            $dest = $base_Folder + "\" + $lst.Split("/")[-1]
+
             
-            Invoke-WebRequest -URI $lst -OutFile $dest
-            Write-Host ("[#] The File has been saved to: {0}" -f ($base_Folder + "\" + $file))
+
+            #If the file does not exist, create it.
+            if (-not(Test-Path -Path $dest -PathType Leaf)) {
+                $statusCode = Get-UrlStatusCode -Url $lst
+                if (!($statusCode -eq 404)){
+
+                    Write-Host "`n[+] Downloading: $lst"
+                    
+                    Invoke-WebRequest -URI $lst -OutFile $dest
+                    Write-Host ("[#] The File has been saved to: {0}" -f ($base_Folder + "\" + $file))
+                }
+                else{write-host "[!] The Remote Server returned 404: $lst"} 
+                 
+             }
+            
+             else {
+                 Write-Host "[!] The File: $dest already exists."
+             }
+
+            
         }
 
     }
