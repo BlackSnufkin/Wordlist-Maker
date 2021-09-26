@@ -8,7 +8,7 @@ Not the best but still works nice
 A Script to download several wordlists from several sources 
 
 ### Note !!
-Check that you have enough space on the disk for all the Wordlists (Over 100GB) !!<br>
+Check that you have enough space on the disk for all the Wordlists (Approximately 200GB) !!<br>
 Wordlists Source: [HashKiller](https://hashkiller.io/leaks), [capsop](https://wordlists.capsop.com/)
 
 ---
