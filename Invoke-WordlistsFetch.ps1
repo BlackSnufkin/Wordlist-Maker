@@ -61,7 +61,7 @@ function WorkSpace ($Directory) {
 
                 $pass_file = $HashKiller + $Link
                 Write-Host "`n[+] Downloading: $pass_file"
-                Invoke-WebRequest -Uri $pass_file -OutFile ($Found_leaks + "\" + $pass_file.split("/")[-1])
+                try{Invoke-WebRequest -Uri $pass_file -OutFile ($Found_leaks + "\" + $pass_file.split("/")[-1])}catch{}
                 Write-Host ("[#] The File has been saved to: {0}" -f ($Found_leaks + "\" + $pass_file.split("/")[-1]))
             }
         }
