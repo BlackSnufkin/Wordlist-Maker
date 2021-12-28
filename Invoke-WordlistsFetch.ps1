@@ -1,4 +1,4 @@
-﻿function Invoke-WordlistsFetch ($Directory){
+function Invoke-WordlistsFetch ($Directory){
 
     if (!($Directory)){
 
@@ -28,13 +28,6 @@ function WorkSpace ($Directory) {
     return $WorkSpace
     
 }
-
-    function Get-UrlStatusCode([string] $Url) {
-        try{(Invoke-WebRequest -Uri $Url -UseBasicParsing -DisableKeepAlive -Method head).StatusCode}
-        catch [Net.WebException]
-        {[int]$_.Exception.Response.StatusCode}
-}
-
 
 
     function HashKiller-Wordlist($Path) {
@@ -147,15 +140,14 @@ function WorkSpace ($Directory) {
 
             #If the file does not exist, create it.
             if (-not(Test-Path -Path $dest -PathType Leaf)) {
-                $statusCode = Get-UrlStatusCode -Url $lst
-                if (!($statusCode -eq 404)){
+                
 
-                    Write-Host "`n[+] Downloading: $lst"
+                Write-Host "`n[+] Downloading: $lst"
                     
-                    Invoke-WebRequest -URI $lst -OutFile $dest
-                    Write-Host ("[#] The File has been saved to: {0}" -f ($base_Folder + "\" + $file))
-                }
-                else{write-host "[!] The Remote Server returned 404: $lst"} 
+                Invoke-WebRequest -URI $lst -OutFile $dest
+                Write-Host ("[#] The File has been saved to: {0}" -f ($base_Folder + "\" + $file))
+               
+               
                  
              }
             
@@ -168,12 +160,8 @@ function WorkSpace ($Directory) {
 
     }
 
-
-    
     $workspace = WorkSpace -Directory $Directory
     HashKiller-Wordlist -Path $workspace
     capsop-Wordlists -Path $workspace
     
-
-
 }
