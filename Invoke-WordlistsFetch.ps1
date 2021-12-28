@@ -30,10 +30,10 @@ function WorkSpace ($Directory) {
 }
 
     function Get-UrlStatusCode([string] $Url) {
-        try {(Invoke-WebRequest -Uri $Url -UseBasicParsing -DisableKeepAlive).StatusCode}
+        try{(Invoke-WebRequest -Uri $Url -UseBasicParsing -DisableKeepAlive -Method head).StatusCode}
         catch [Net.WebException]
         {[int]$_.Exception.Response.StatusCode}
-    }
+}
 
 
 
